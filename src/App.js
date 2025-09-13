@@ -256,9 +256,101 @@ export default function FlappyLeetCode() {
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Background
-    ctx.fillStyle = '#87CEEB';
+    // Background - Night sky with stars
+    const gradient = ctx.createLinearGradient(0, 0, 0, GAME_HEIGHT);
+    gradient.addColorStop(0, '#1A5F5F'); // Dark teal top
+    gradient.addColorStop(0.6, '#2E8B8B'); // Medium teal
+    gradient.addColorStop(1, '#4DAAAA'); // Light teal bottom
+    ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Stars
+    ctx.fillStyle = '#FFFFFF';
+    const starPositions = [
+      {x: 80, y: 60}, {x: 150, y: 45}, {x: 220, y: 80}, {x: 290, y: 55},
+      {x: 360, y: 70}, {x: 430, y: 50}, {x: 500, y: 65}, {x: 570, y: 40},
+      {x: 640, y: 75}, {x: 710, y: 55}, {x: 120, y: 120}, {x: 380, y: 110},
+      {x: 680, y: 100}, {x: 50, y: 140}, {x: 750, y: 130}
+    ];
+    
+    starPositions.forEach(star => {
+      // Small stars
+      ctx.fillRect(star.x, star.y, 2, 2);
+      // Sparkle effect
+      ctx.fillRect(star.x - 2, star.y, 1, 1);
+      ctx.fillRect(star.x + 3, star.y, 1, 1);
+      ctx.fillRect(star.x, star.y - 2, 1, 1);
+      ctx.fillRect(star.x, star.y + 3, 1, 1);
+    });
+
+    // Clouds
+    ctx.fillStyle = 'rgba(70, 130, 180, 0.6)';
+    const drawCloud = (x, y, scale = 1) => {
+      ctx.beginPath();
+      ctx.arc(x, y, 25 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 25 * scale, y, 35 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 50 * scale, y, 25 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 12 * scale, y - 15 * scale, 20 * scale, 0, Math.PI * 2);
+      ctx.arc(x + 35 * scale, y - 15 * scale, 25 * scale, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    
+    drawCloud(100, 350, 0.8);
+    drawCloud(300, 320, 1.0);
+    drawCloud(550, 340, 0.9);
+    drawCloud(750, 310, 0.7);
+
+    // City skyline
+    const buildings = [
+      {x: 0, width: 60, height: 120, windows: [[10, 20], [35, 20], [10, 45], [35, 45], [10, 70], [35, 70]]},
+      {x: 60, width: 80, height: 140, windows: [[10, 15], [35, 15], [60, 15], [10, 40], [35, 40], [60, 40], [10, 65], [35, 65], [60, 65]]},
+      {x: 140, width: 70, height: 100, windows: [[10, 25], [35, 25], [55, 25], [10, 50], [35, 50], [55, 50]]},
+      {x: 210, width: 90, height: 160, windows: [[10, 10], [30, 10], [50, 10], [70, 10], [10, 35], [30, 35], [50, 35], [70, 35], [10, 60], [30, 60], [50, 60], [70, 60], [10, 85], [30, 85], [50, 85], [70, 85]]},
+      {x: 300, width: 75, height: 130, windows: [[10, 20], [35, 20], [55, 20], [10, 45], [35, 45], [55, 45], [10, 70], [35, 70], [55, 70]]},
+      {x: 375, width: 65, height: 110, windows: [[10, 25], [30, 25], [45, 25], [10, 50], [30, 50], [45, 50]]},
+      {x: 440, width: 85, height: 150, windows: [[10, 15], [30, 15], [50, 15], [65, 15], [10, 40], [30, 40], [50, 40], [65, 40], [10, 65], [30, 65], [50, 65], [65, 65]]},
+      {x: 525, width: 70, height: 120, windows: [[10, 25], [35, 25], [50, 25], [10, 50], [35, 50], [50, 50]]},
+      {x: 595, width: 80, height: 140, windows: [[10, 20], [35, 20], [60, 20], [10, 45], [35, 45], [60, 45], [10, 70], [35, 70], [60, 70]]},
+      {x: 675, width: 75, height: 125, windows: [[10, 25], [35, 25], [55, 25], [10, 50], [35, 50], [55, 50], [10, 75], [35, 75], [55, 75]]},
+      {x: 750, width: 50, height: 95, windows: [[10, 30], [30, 30], [10, 55], [30, 55]]}
+    ];
+
+    buildings.forEach(building => {
+      const buildingTop = GAME_HEIGHT - 150 - building.height;
+      
+      // Building silhouette
+      ctx.fillStyle = '#2C5F2C';
+      ctx.fillRect(building.x, buildingTop, building.width, building.height);
+      
+      // Building highlight edge
+      ctx.fillStyle = '#3A7A3A';
+      ctx.fillRect(building.x, buildingTop, 3, building.height);
+      
+      // Windows (lit up)
+      ctx.fillStyle = '#FFD700';
+      building.windows.forEach(window => {
+        ctx.fillRect(building.x + window[0], buildingTop + window[1], 12, 8);
+      });
+    });
+
+    // Grass/ground
+    const grassGradient = ctx.createLinearGradient(0, GAME_HEIGHT - 150, 0, GAME_HEIGHT - 20);
+    grassGradient.addColorStop(0, '#4CAF50');
+    grassGradient.addColorStop(0.3, '#45A049');
+    grassGradient.addColorStop(1, '#2E7D32');
+    ctx.fillStyle = grassGradient;
+    ctx.fillRect(0, GAME_HEIGHT - 150, GAME_WIDTH, 130);
+
+    // Grass texture lines
+    ctx.strokeStyle = '#66BB6A';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < GAME_WIDTH; i += 20) {
+      ctx.beginPath();
+      ctx.moveTo(i, GAME_HEIGHT - 150);
+      ctx.lineTo(i + 10, GAME_HEIGHT - 140);
+      ctx.stroke();
+    }
+
 
     // Bird body (main circle)
     ctx.fillStyle = '#FFD700';

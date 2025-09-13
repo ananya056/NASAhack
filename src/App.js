@@ -84,7 +84,8 @@ const LANGUAGE_INFO = {
 
 export default function FlappyLeetCode() {
   // Game state
-  const [gameState, setGameState] = useState('menu');
+  const [gameState, setGameState] = useState('loading');
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [bird, setBird] = useState({ x: 100, y: 300, velocity: 0 });
   const [pipes, setPipes] = useState([]);
   const [score, setScore] = useState(0);
@@ -96,6 +97,90 @@ export default function FlappyLeetCode() {
   
   const gameLoopRef = useRef();
   const canvasRef = useRef();
+
+  // Sound effect functions
+  const playFlapSound = () => {
+    try {
+      // Create AudioContext if not already created
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Create a quick "flap" sound using oscillators
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Flap sound: quick frequency sweep from high to low
+      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+      
+      // Quick volume envelope
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.type = 'square';
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (error) {
+      console.log('Audio not supported:', error);
+    }
+  };
+
+  const playDeathSound = () => {
+    try {
+      // Create AudioContext if not already created
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Create a dramatic "death" sound
+      const oscillator1 = audioContext.createOscillator();
+      const oscillator2 = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator1.connect(gainNode);
+      oscillator2.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Death sound: dramatic frequency drop
+      oscillator1.frequency.setValueAtTime(300, audioContext.currentTime);
+      oscillator1.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.5);
+      
+      oscillator2.frequency.setValueAtTime(150, audioContext.currentTime);
+      oscillator2.frequency.exponentialRampToValueAtTime(25, audioContext.currentTime + 0.5);
+      
+      // Volume envelope for dramatic effect
+      gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      
+      oscillator1.type = 'sawtooth';
+      oscillator2.type = 'triangle';
+      
+      oscillator1.start(audioContext.currentTime);
+      oscillator2.start(audioContext.currentTime);
+      oscillator1.stop(audioContext.currentTime + 0.5);
+      oscillator2.stop(audioContext.currentTime + 0.5);
+    } catch (error) {
+      console.log('Audio not supported:', error);
+    }
+  };
+
+  // Loading screen effect
+  useEffect(() => {
+    if (gameState === 'loading') {
+      const loadingInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(loadingInterval);
+            setTimeout(() => setGameState('menu'), 500);
+            return 100;
+          }
+          return prev + Math.random() * 8 + 2; // Random progress increments
+        });
+      }, 150);
+      
+      return () => clearInterval(loadingInterval);
+    }
+  }, [gameState]);
 
   // Initialize game
   const initGame = () => {
@@ -168,6 +253,7 @@ export default function FlappyLeetCode() {
 
   // Trigger death and show coding challenge
   const triggerDeath = () => {
+    playDeathSound(); // Play death sound effect
     setGameState('coding');
     const randomProblem = LEETCODE_PROBLEMS[Math.floor(Math.random() * LEETCODE_PROBLEMS.length)];
     setCurrentProblem(randomProblem);
@@ -177,6 +263,7 @@ export default function FlappyLeetCode() {
   // Handle bird jump
   const jump = () => {
     if (gameState === 'playing') {
+      playFlapSound(); // Play flap sound effect
       setBird(prevBird => ({
         ...prevBird,
         velocity: JUMP_FORCE
@@ -471,6 +558,13 @@ export default function FlappyLeetCode() {
       <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style jsx>{`
         h1 { font-family: 'Quicksand', sans-serif; }
+        @keyframes fade-in-out {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+        .animate-fade-in-out {
+          animation: fade-in-out 2s ease-in-out infinite;
+        }
       `}</style>
       
       <div className="mb-8">
@@ -478,6 +572,94 @@ export default function FlappyLeetCode() {
           FLAPPY LEETCODE
         </h1>
       </div>
+      
+      {gameState === 'loading' && (
+        <div className="flex flex-col items-center justify-center min-h-[600px] w-full max-w-4xl">
+          {/* Animated Background */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 animate-pulse"></div>
+            {/* Floating Code Elements */}
+            <div className="absolute top-1/4 left-1/4 text-green-400 opacity-20 animate-bounce text-2xl font-mono">
+              {'{ }'}
+            </div>
+            <div className="absolute top-1/3 right-1/4 text-yellow-400 opacity-20 animate-bounce text-xl font-mono" style={{ animationDelay: '0.5s' }}>
+              for()
+            </div>
+            <div className="absolute bottom-1/3 left-1/3 text-blue-400 opacity-20 animate-bounce text-lg font-mono" style={{ animationDelay: '1s' }}>
+              if/else
+            </div>
+            <div className="absolute bottom-1/4 right-1/3 text-purple-400 opacity-20 animate-bounce text-xl font-mono" style={{ animationDelay: '1.5s' }}>
+              return
+            </div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-red-400 opacity-20 animate-spin text-3xl font-mono">
+              λ
+            </div>
+          </div>
+
+          {/* Main Loading Content */}
+          <div className="relative z-10 text-center">
+            {/* Animated Bird */}
+            <div className="mb-8 relative">
+              <div className="w-20 h-20 bg-yellow-400 rounded-full mx-auto animate-bounce shadow-lg">
+                <div className="absolute top-4 right-6 w-3 h-3 bg-black rounded-full"></div>
+                <div className="absolute top-3 right-7 w-1 h-1 bg-white rounded-full"></div>
+                <div className="absolute top-8 right-2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-orange-500"></div>
+              </div>
+              {/* Wing animation */}
+              <div className="absolute top-6 left-1/2 transform -translate-x-4 w-6 h-4 bg-orange-400 rounded-full animate-pulse"></div>
+            </div>
+
+            {/* Loading Title */}
+            <h2 className="text-4xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 bg-clip-text text-transparent animate-pulse">
+              LOADING
+            </h2>
+            <p className="text-xl text-gray-300 mb-8 animate-fade-in-out">
+              Compiling your coding adventure...
+            </p>
+
+            {/* Progress Bar */}
+            <div className="w-80 mx-auto mb-6">
+              <div className="flex justify-between text-sm text-gray-400 mb-2">
+                <span>Progress</span>
+                <span>{Math.round(loadingProgress)}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+                <div 
+                  className="h-full bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 rounded-full transition-all duration-300 ease-out shadow-lg"
+                  style={{ width: `${Math.min(loadingProgress, 100)}%` }}
+                >
+                  <div className="h-full bg-white opacity-20 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Loading Messages */}
+            <div className="h-6 mb-4">
+              <p className="text-gray-400 animate-pulse">
+                {loadingProgress < 20 && "Initializing game engine..."}
+                {loadingProgress >= 20 && loadingProgress < 40 && "Loading LeetCode problems..."}
+                {loadingProgress >= 40 && loadingProgress < 60 && "Preparing coding environments..."}
+                {loadingProgress >= 60 && loadingProgress < 80 && "Calibrating difficulty..."}
+                {loadingProgress >= 80 && loadingProgress < 100 && "Almost ready..."}
+                {loadingProgress >= 100 && "Ready to fly! 🚀"}
+              </p>
+            </div>
+
+            {/* Animated Language Icons */}
+            <div className="flex justify-center gap-4 mt-6">
+              {Object.entries(LANGUAGE_INFO).map(([lang, info], index) => (
+                <div
+                  key={lang}
+                  className={`w-8 h-8 rounded ${info.bg} ${info.color} flex items-center justify-center text-xs font-bold animate-bounce`}
+                  style={{ animationDelay: `${index * 0.2}s` }}
+                >
+                  {info.name[0]}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       
       {gameState === 'menu' && (
         <div className="text-center">
@@ -514,6 +696,7 @@ export default function FlappyLeetCode() {
           
           <p className="text-xl mb-4">Press SPACE to start flying!</p>
           <p className="text-sm text-gray-400 mb-4">Warning: If you crash, you'll have to solve a coding problem to continue! 💀</p>
+          <p className="text-sm text-gray-300 mb-4">🔊 Sound effects enabled! Make sure your volume is on.</p>
           <button
             onClick={startGame}
             className="bg-green-500 hover:bg-green-600 px-6 py-2 rounded text-lg font-semibold"
@@ -538,7 +721,7 @@ export default function FlappyLeetCode() {
             className="border border-gray-600 cursor-pointer"
             onClick={jump}
           />
-          <p className="mt-2 text-sm text-gray-400">Click or press SPACE to jump</p>
+          <p className="mt-2 text-sm text-gray-400">Click or press SPACE to jump (with sound!)</p>
         </div>
       )}
 

@@ -230,6 +230,11 @@ export default function FlappyLeetCode() {
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.code === 'Space') {
+        // Don't prevent space if user is typing in a textarea
+        if (e.target.tagName === 'TEXTAREA') {
+          return; // Allow normal space behavior in textarea
+        }
+        
         e.preventDefault();
         if (gameState === 'menu' || gameState === 'gameOver') {
           startGame();
@@ -255,13 +260,63 @@ export default function FlappyLeetCode() {
     ctx.fillStyle = '#87CEEB';
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    // Bird
+    // Bird body (main circle)
     ctx.fillStyle = '#FFD700';
-    ctx.fillRect(bird.x, bird.y, BIRD_SIZE, BIRD_SIZE);
-    
-    // Bird eye
-    ctx.fillStyle = '#000';
-    ctx.fillRect(bird.x + 20, bird.y + 8, 5, 5);
+    ctx.beginPath();
+    ctx.arc(bird.x + BIRD_SIZE/2, bird.y + BIRD_SIZE/2, BIRD_SIZE/2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Bird body shading (gradient effect)
+    ctx.fillStyle = '#FFA500';
+    ctx.beginPath();
+    ctx.arc(bird.x + BIRD_SIZE/2 + 3, bird.y + BIRD_SIZE/2 + 3, BIRD_SIZE/2 - 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wing
+    ctx.fillStyle = '#FF8C00';
+    ctx.beginPath();
+    const wingY = bird.y + BIRD_SIZE/2 + Math.sin(Date.now() * 0.02) * 3; // Flapping animation
+    ctx.ellipse(bird.x + BIRD_SIZE/2 - 5, wingY, 8, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wing highlight
+    ctx.fillStyle = '#FFB84D';
+    ctx.beginPath();
+    ctx.ellipse(bird.x + BIRD_SIZE/2 - 5, wingY - 1, 5, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Beak
+    ctx.fillStyle = '#FF4500';
+    ctx.beginPath();
+    ctx.moveTo(bird.x + BIRD_SIZE - 2, bird.y + BIRD_SIZE/2);
+    ctx.lineTo(bird.x + BIRD_SIZE + 8, bird.y + BIRD_SIZE/2 - 3);
+    ctx.lineTo(bird.x + BIRD_SIZE + 8, bird.y + BIRD_SIZE/2 + 3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Eye background (white)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(bird.x + BIRD_SIZE/2 + 5, bird.y + BIRD_SIZE/2 - 3, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye pupil (black)
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(bird.x + BIRD_SIZE/2 + 7, bird.y + BIRD_SIZE/2 - 3, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Eye shine
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(bird.x + BIRD_SIZE/2 + 8, bird.y + BIRD_SIZE/2 - 4, 1, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Belly highlight
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(bird.x + BIRD_SIZE/2 - 2, bird.y + BIRD_SIZE/2 - 2, BIRD_SIZE/3, 0, Math.PI * 2);
+    ctx.fill();
 
     // Pipes
     pipes.forEach(pipe => {
